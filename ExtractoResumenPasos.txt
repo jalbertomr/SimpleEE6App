@@ -1,0 +1,151 @@
+Getting started with JavaEE Applications
+https://netbeans.org/kb/docs/javaee/javaee-gettingstarted.html
+
+Web Application
+EJB 3.1 stateless session bean facade
+entity class
+JPA 2.x
+named managed bean --(access)--> session facade
+Facelets view framework (JSF 2.x)
+
+Create the Entity Class and Session Facade
+  Create the Web Application project
+  Create the Entity Class
+  Create the Session Facade
+Create the JSF Managed Bean and JSF Pages
+  Create the Managed Bean
+  Modifying the Index Page
+  Create the Results Page
+
+File -> New Project -> Web -> Web Application
+
+project name SimpleEE6App, Deselect use dedicated folder option ... -> finish
+
+select JavaServer Faces ...-> finish
+
+CREATE Entity Class
+
+Right click project node new -> other -> persistence -> Entity Class
+
+class Name -> "Message"
+Package    -> "entities"
+
+select Create Persistence Unit -> next
+select datasource -> jdbc/sample -> finish
+
+persisten unit name, EclipseLink persistence provider, using Java Transaction API
+
+-> finish
+
+In new entity class add 
+private String message;
+Generate Setters and Getters
+-> Save
+
+look at the persistenceUnit.xml editor, application will use Java Transactin API 
+(transaction-type="JTA"), this specifies that the responsability for managing the
+lifecycle of entities in the persistence context is assigned to the container
+
+CREATE Session Facade (Class)
+
+Right click project node new -> other -> Enterprise JavaBeans -> Session Beans For Entity Classes
+select Message Entity -> Add -> Next
+Package -> boundary
+notice session bean <--> business interface
+                    <--> non-interface view -- local managed bean
+
+-> finish
+
+Is created:
+  @Stateless
+  public class MessageFacade extends AbstractFacade<Message>{
+	@persistenceContext(unitName = "SimpleEE6AppPU")  //inject entity manager resource
+	private EntityManager em;
+
+  AbstractFacade.java to create, edit, remove and find entities
+
+CREATE JSF MANAGED BEAN AND JSF PAGES
+
+creation of the presentation layer for the application using JavaServer Faces(JSF)
+and manager backing bean
+
+CREATE the Managed Bean
+
+Right click project node new -> other -> JavaServer Faces -> JSF Managed Bean
+Class Name: MessageView
+   Managed Bean name MessageView as the value for the inputText and commandButton in
+the JSF page index.xhtml when calling methods in the bean
+package: my.presentation
+
+name: MessageView
+Scope: Request 
+-> Finish
+
+   @ManagedBean(name="MessageView")
+   @RequestScoped
+   public class MessageView
+     /* creates a new instance of MessageView */
+     public MessageView() {
+     }
+   }
+
+Right click editor -> insert Code -> Call Enterprise Bean
+select MessageFacade
+
+add following code to the new instance 
+     /* creates a new instance of MessageView */
+     public MassageView() {
+	this.message = new Message();
+     }
+
+add the following code to the class
+   //creates a new field
+   private Message message;
+
+   // Calls getMessage to retrive the message
+   public Message getMessage() {
+	return message;
+   }
+
+   //Returns the total number of messages
+   public int getNumberOfMessages() {
+     return messageFacade.findAll().size();
+   }
+
+   // Saves the message and then returns the string "theend"
+   public String postMessage() {
+      this.messageFacade.create(message);
+      return "theend";
+   }
+
+MODIFYING the Index Page
+
+  open index.xhtml in the editor
+  <h:body>
+    <f:view>
+ 	<h:form>
+           <h:outputLabel value="Message:"/><h:inputText value="#{MessageView.message.message}"/>
+	   <h:commandButton action="#{MessageView.postMessage}" value="Post Message"/>
+        </h:form>
+    </f:view>
+  </h:body>
+
+-> save
+
+CREATING the Result Page
+
+Right click project node new -> other -> JavaServer Faces -> JSF Page
+file Name: theend
+Options:  Facelets
+
+Modify the file "theend"
+
+<h:body>
+   <h:outputLabel value="Thanks! There are "/>
+   <h:outputText value="#{MessageView.numberOfMessages}"/>
+   <h:outputLabel value=" messages!"/>
+</h:body>
+
+RUNNING the application
+
+Right click project node Run.
